@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuthMe } from "@/hooks/use-auth";
 import { AddLeadDialog } from "@/components/features/leads/add-lead-dialog";
+import { InlineError } from "@/components/shared/inline-error";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { apiClient } from "@/lib/api/client";
+import { parseApiError } from "@/lib/api/error";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const SIDEBAR_AVATAR =
@@ -51,7 +53,7 @@ const navItems: { href: string; label: string; icon: React.ReactNode; activeClas
 export function AutomationShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: me } = useAuthMe();
+  const { data: me, isError: meError, error: meErrObj } = useAuthMe();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const onLogout = async () => {
@@ -187,6 +189,9 @@ export function AutomationShell({ children }: { children: React.ReactNode }) {
             </AddLeadDialog>
           </div>
         </header>
+        <div className="px-4 pt-4 md:px-8">
+          <InlineError message={meError ? parseApiError(meErrObj).message : undefined} />
+        </div>
         {children}
       </main>
     </div>

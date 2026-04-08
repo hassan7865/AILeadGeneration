@@ -16,9 +16,11 @@ import {
 } from "lucide-react";
 
 import { ListLoader } from "@/components/shared/list-loader";
+import { InlineError } from "@/components/shared/inline-error";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useAutomationConfig, useUpdateAutomationConfig } from "@/hooks/use-automation";
+import { parseApiError } from "@/lib/api/error";
 import type { AutomationConfig } from "@/types/api";
 
 const HUBSPOT_IMG =
@@ -67,12 +69,13 @@ function PeerToggle({
 }
 
 export default function AutomationPage() {
-  const { data: config, isLoading } = useAutomationConfig();
+  const { data: config, isLoading, isError: configError, error: configErrObj } = useAutomationConfig();
   const updateConfig = useUpdateAutomationConfig();
 
   const [form, setForm] = useState<AutomationConfig | null>(null);
   const [newIndustry, setNewIndustry] = useState("");
   const [techInput, setTechInput] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const currentForm = form ?? config ?? null;
 
   const updateForm = (updater: (prev: AutomationConfig) => AutomationConfig) => {
@@ -92,11 +95,16 @@ export default function AutomationPage() {
 
   const onSave = async () => {
     if (!currentForm) return;
-    await updateConfig.mutateAsync({
-      ...currentForm,
-      target_industries: currentForm.target_industries.map((v) => v.trim()).filter(Boolean),
-      tech_stack: currentForm.tech_stack.map((v) => v.trim()).filter(Boolean),
-    });
+    setSaveError(null);
+    try {
+      await updateConfig.mutateAsync({
+        ...currentForm,
+        target_industries: currentForm.target_industries.map((v) => v.trim()).filter(Boolean),
+        tech_stack: currentForm.tech_stack.map((v) => v.trim()).filter(Boolean),
+      });
+    } catch (error) {
+      setSaveError(parseApiError(error).message);
+    }
   };
 
   const updateIndustry = (index: number, value: string) => {
@@ -148,6 +156,7 @@ export default function AutomationPage() {
   if (!currentForm) {
     return (
       <div className="mx-auto max-w-5xl space-y-8 p-4 md:p-8">
+        <InlineError message={configError ? parseApiError(configErrObj).message : "Automation config unavailable."} />
         <ListLoader rows={10} />
       </div>
     );
@@ -155,6 +164,7 @@ export default function AutomationPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-4 md:p-8">
+      <InlineError message={configError ? parseApiError(configErrObj).message : undefined} />
       <header className="mb-10">
         <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">Automation Settings</h2>
         <p className="mt-2 font-medium text-slate-500">Fine-tune your Ideal Customer Profile and AI discovery engine.</p>
@@ -412,6 +422,7 @@ export default function AutomationPage() {
           </section>
 
           <div className="pt-4">
+            <InlineError message={saveError ?? undefined} className="mb-3" />
             <LoadingButton
               type="button"
               className="w-full rounded-xl bg-primary-container py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 hover:opacity-95 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"

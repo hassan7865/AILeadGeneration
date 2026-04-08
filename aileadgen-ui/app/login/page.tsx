@@ -6,24 +6,34 @@ import { useState } from "react";
 import { LockKeyhole, Workflow } from "lucide-react";
 
 import { apiClient } from "@/lib/api/client";
+import { InlineError, FieldErrorText } from "@/components/shared/inline-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { parseApiError } from "@/lib/api/error";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("m.hassansiddiqui9245@gmail.com");
   const [password, setPassword] = useState("start@123");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setFormError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
       await apiClient.post("/auth/login", { email, password });
       router.push("/dashboard");
+    } catch (error) {
+      const parsed = parseApiError(error);
+      setFormError(parsed.message);
+      setFieldErrors(parsed.fieldErrors);
     } finally {
       setLoading(false);
     }
@@ -82,6 +92,7 @@ export default function LoginPage() {
                     required
                     placeholder="name@company.com"
                   />
+                  <FieldErrorText message={fieldErrors.email} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -104,7 +115,9 @@ export default function LoginPage() {
                       className="pl-9"
                     />
                   </div>
+                  <FieldErrorText message={fieldErrors.password} />
                 </div>
+                <InlineError message={formError ?? undefined} />
                 <LoadingButton type="submit" className="h-10 w-full text-sm font-semibold" loading={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </LoadingButton>

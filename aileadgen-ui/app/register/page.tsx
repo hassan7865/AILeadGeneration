@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { apiClient } from "@/lib/api/client";
+import { FieldErrorText, InlineError } from "@/components/shared/inline-error";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { parseApiError } from "@/lib/api/error";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,13 +18,21 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setFormError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
       await apiClient.post("/auth/register", { name, email, password });
       router.push("/dashboard");
+    } catch (error) {
+      const parsed = parseApiError(error);
+      setFormError(parsed.message);
+      setFieldErrors(parsed.fieldErrors);
     } finally {
       setLoading(false);
     }
@@ -64,15 +74,19 @@ export default function RegisterPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="name" className="text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Full Name</Label>
                   <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Alex Rivera" />
+                  <FieldErrorText message={fieldErrors.name} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Work Email</Label>
                   <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="alex@company.com" />
+                  <FieldErrorText message={fieldErrors.email} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="password" className="text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Password</Label>
                   <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
+                  <FieldErrorText message={fieldErrors.password} />
                 </div>
+                <InlineError message={formError ?? undefined} />
                 <LoadingButton type="submit" className="w-full py-4" loading={loading}>
                   {loading ? "Creating account..." : "Create Account"}
                 </LoadingButton>

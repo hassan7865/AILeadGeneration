@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShell } from "@/components/layouts/app-shell";
+import { InlineError } from "@/components/shared/inline-error";
 import { ListLoader } from "@/components/shared/list-loader";
 import {
   useIcpHealth,
@@ -10,6 +11,7 @@ import {
   useSignalSources,
 } from "@/hooks/use-insights";
 import { Briefcase, Filter, Network, TrendingUp, UserRoundSearch, UsersRound } from "lucide-react";
+import { parseApiError } from "@/lib/api/error";
 import {
   CartesianGrid,
   Cell,
@@ -58,11 +60,16 @@ function iconForSignalType(st: string) {
 }
 
 export default function InsightsPage() {
-  const { data: summary, isLoading: loadingSummary } = useInsightsSummary();
-  const { data: quality, isLoading: loadingQuality } = useLeadQuality(30);
-  const { data: sources, isLoading: loadingSources } = useSignalSources();
-  const { data: icp, isLoading: loadingIcp } = useIcpHealth();
-  const { data: signalEvents = [], isLoading: loadingEvents } = useSignalEvents(20);
+  const { data: summary, isLoading: loadingSummary, isError: summaryError, error: summaryErrObj } = useInsightsSummary();
+  const { data: quality, isLoading: loadingQuality, isError: qualityError, error: qualityErrObj } = useLeadQuality(30);
+  const { data: sources, isLoading: loadingSources, isError: sourcesError, error: sourcesErrObj } = useSignalSources();
+  const { data: icp, isLoading: loadingIcp, isError: icpError, error: icpErrObj } = useIcpHealth();
+  const {
+    data: signalEvents = [],
+    isLoading: loadingEvents,
+    isError: eventsError,
+    error: eventsErrObj,
+  } = useSignalEvents(20);
 
   if (loadingSummary || loadingQuality || loadingSources || loadingIcp || loadingEvents) {
     return (
@@ -73,6 +80,17 @@ export default function InsightsPage() {
       </AppShell>
     );
   }
+  const queryError = summaryError
+    ? parseApiError(summaryErrObj).message
+    : qualityError
+      ? parseApiError(qualityErrObj).message
+      : sourcesError
+        ? parseApiError(sourcesErrObj).message
+        : icpError
+          ? parseApiError(icpErrObj).message
+          : eventsError
+            ? parseApiError(eventsErrObj).message
+            : null;
 
   const sourceEntries = Object.entries(sources ?? {});
   const segmentEntries = Object.entries(icp?.segments ?? {});
@@ -90,6 +108,7 @@ export default function InsightsPage() {
   return (
     <AppShell>
       <div className="space-y-8 p-4 md:p-8">
+        <InlineError message={queryError ?? undefined} />
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary">Intelligence Center</span>

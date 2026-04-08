@@ -2,15 +2,17 @@
 
 import { Archive, Eye, UserPlus } from "lucide-react";
 
+import { InlineError } from "@/components/shared/inline-error";
 import { ListLoader } from "@/components/shared/list-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useLeads } from "@/hooks/use-leads";
+import { parseApiError } from "@/lib/api/error";
 
 export function LeadsTable() {
-  const { data = [], isLoading } = useLeads();
+  const { data = [], isLoading, isError, error } = useLeads();
   const logoClassByCompany: Record<string, string> = {
     Stripe: "bg-indigo-500 text-white",
     Linear: "bg-black text-white",
@@ -28,6 +30,7 @@ export function LeadsTable() {
 
   return (
     <div className="overflow-hidden rounded-xl border border-outline-variant/10 bg-surface-container-lowest shadow-sm">
+      <InlineError message={isError ? parseApiError(error).message : undefined} className="m-4 mb-0" />
       <div className="overflow-x-auto">
       <Table>
         <TableHeader>

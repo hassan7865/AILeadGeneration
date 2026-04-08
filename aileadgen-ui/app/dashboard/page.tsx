@@ -2,15 +2,22 @@
 
 import { AppShell } from "@/components/layouts/app-shell";
 import { LeadsTable } from "@/components/features/leads/leads-table";
+import { InlineError } from "@/components/shared/inline-error";
 import { Button } from "@/components/ui/button";
 import { ListLoader } from "@/components/shared/list-loader";
 import { useAutomationRuns } from "@/hooks/use-automation";
 import { useInsightsSummary } from "@/hooks/use-insights";
+import { parseApiError } from "@/lib/api/error";
 import { Bot, ChartLine } from "lucide-react";
 
 export default function DashboardPage() {
-  const { data: summary, isLoading: loadingSummary } = useInsightsSummary();
-  const { data: runs, isLoading: loadingRuns } = useAutomationRuns();
+  const { data: summary, isLoading: loadingSummary, isError: summaryError, error: summaryErrObj } = useInsightsSummary();
+  const { data: runs, isLoading: loadingRuns, isError: runsError, error: runsErrObj } = useAutomationRuns();
+  const queryError = summaryError
+    ? parseApiError(summaryErrObj).message
+    : runsError
+      ? parseApiError(runsErrObj).message
+      : null;
 
   if (loadingSummary || loadingRuns) {
     return (
@@ -29,6 +36,7 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <div className="space-y-6 p-4 md:p-6">
+        <InlineError message={queryError ?? undefined} />
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tighter text-on-surface md:text-3xl">Leads Pipeline</h1>
