@@ -1,12 +1,13 @@
 import uuid
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from app.models.entities import UserRole
+from app.schemas.email_types import AccountEmail
 
 
 class InviteUserRequest(BaseModel):
-    email: EmailStr
+    email: AccountEmail
     name: str
     role: UserRole = UserRole.member
 
@@ -18,6 +19,6 @@ class UpdateUserRequest(BaseModel):
 
 class UserListOut(BaseModel):
     id: uuid.UUID
-    email: EmailStr
+    email: AccountEmail
     name: str
     role: UserRole

@@ -111,9 +111,10 @@ export function AutomationShell({ children }: { children: React.ReactNode }) {
       <div className="mt-auto px-6 pt-6">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
+            <Button
               type="button"
-              className="flex w-full items-center gap-3 rounded-xl bg-white/5 p-3 text-left transition hover:bg-white/10"
+              variant="ghost"
+              className="h-auto w-full justify-start gap-3 rounded-xl bg-white/5 p-3 font-normal text-left hover:bg-white/10"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={SIDEBAR_AVATAR} alt="" className="size-8 rounded-full bg-slate-700 object-cover" />
@@ -121,7 +122,7 @@ export function AutomationShell({ children }: { children: React.ReactNode }) {
                 <p className="truncate text-xs font-semibold text-white">{me?.name ?? "Alex Chen"}</p>
                 <p className="truncate text-[10px] text-slate-500">Pro Account</p>
               </div>
-            </button>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60 rounded-xl border border-slate-200/80 bg-white p-2 shadow-xl">
             <DropdownMenuLabel className="px-2 py-2">

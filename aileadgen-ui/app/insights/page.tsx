@@ -3,6 +3,7 @@
 import { AppShell } from "@/components/layouts/app-shell";
 import { InlineError } from "@/components/shared/inline-error";
 import { ListLoader } from "@/components/shared/list-loader";
+import { Button } from "@/components/ui/button";
 import {
   useIcpHealth,
   useInsightsSummary,
@@ -348,16 +349,16 @@ export default function InsightsPage() {
 
         <footer className="mt-auto flex flex-col items-start gap-3 border-t border-outline-variant/10 p-6 text-[11px] font-medium text-slate-400 md:flex-row md:items-center md:justify-between md:p-8">
           <p>© 2026 LeadAgent AI Platform. All rights reserved.</p>
-          <div className="flex gap-4">
-            <a href="#" className="transition-colors hover:text-primary">
-              Privacy Policy
-            </a>
-            <a href="#" className="transition-colors hover:text-primary">
-              Terms of Service
-            </a>
-            <a href="#" className="transition-colors hover:text-primary">
-              System Status
-            </a>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="link" className="h-auto px-2 text-[11px] font-medium text-slate-400" asChild>
+              <a href="#">Privacy Policy</a>
+            </Button>
+            <Button variant="link" className="h-auto px-2 text-[11px] font-medium text-slate-400" asChild>
+              <a href="#">Terms of Service</a>
+            </Button>
+            <Button variant="link" className="h-auto px-2 text-[11px] font-medium text-slate-400" asChild>
+              <a href="#">System Status</a>
+            </Button>
           </div>
         </footer>
       </div>

@@ -47,9 +47,9 @@ export default function LoginPage() {
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="text-xl font-bold tracking-tighter text-slate-900">LeadAgent</div>
           <div className="flex items-center gap-6 text-sm">
-            <button type="button" className="hidden text-slate-500 md:block">
+            <Button type="button" variant="ghost" className="hidden h-auto px-2 font-normal text-slate-500 md:inline-flex">
               Support
-            </button>
+            </Button>
             <Link href="/register" className="font-semibold text-primary">
               Sign Up
             </Link>

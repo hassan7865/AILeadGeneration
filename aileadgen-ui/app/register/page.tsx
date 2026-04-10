@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { apiClient } from "@/lib/api/client";
 import { FieldErrorText, InlineError } from "@/components/shared/inline-error";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,9 +47,13 @@ export default function RegisterPage() {
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="text-xl font-bold tracking-tighter">LeadAgent</div>
           <div className="flex items-center gap-8">
-            <div className="hidden gap-6 md:flex">
-              <a className="text-sm text-slate-500 hover:text-blue-700">Support</a>
-              <a className="text-sm text-slate-500 hover:text-blue-700">Documentation</a>
+            <div className="hidden items-center gap-2 md:flex">
+              <Button variant="link" className="h-auto px-2 text-sm font-normal text-slate-500" asChild>
+                <a href="#">Support</a>
+              </Button>
+              <Button variant="link" className="h-auto px-2 text-sm font-normal text-slate-500" asChild>
+                <a href="#">Documentation</a>
+              </Button>
             </div>
             <Link href="/register" className="text-sm font-semibold text-blue-600">Sign Up</Link>
           </div>

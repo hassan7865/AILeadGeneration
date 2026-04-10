@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import {
   Briefcase,
   Clock,
-  ChevronDown,
   Database,
   Info,
   Network,
@@ -17,8 +16,19 @@ import {
 
 import { ListLoader } from "@/components/shared/list-loader";
 import { InlineError } from "@/components/shared/inline-error";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { useAutomationConfig, useUpdateAutomationConfig } from "@/hooks/use-automation";
 import { parseApiError } from "@/lib/api/error";
 import type { AutomationConfig } from "@/types/api";
@@ -40,33 +50,6 @@ const SOURCE_ROWS: { key: SourceKey; label: string; icon: React.ReactNode }[] = 
   { key: "apollo", label: "Apollo", icon: <Rocket className="size-[20px] text-slate-400" /> },
   { key: "jobboard", label: "Job Boards", icon: <Briefcase className="size-[20px] text-slate-400" /> },
 ];
-
-function PeerToggle({
-  id,
-  defaultChecked,
-  checked,
-  onCheckedChange,
-}: {
-  id: string;
-  defaultChecked?: boolean;
-  checked?: boolean;
-  onCheckedChange?: (next: boolean) => void;
-}) {
-  const isControlled = typeof checked === "boolean";
-  return (
-    <label htmlFor={id} className="relative inline-flex cursor-pointer items-center">
-      <input
-        id={id}
-        type="checkbox"
-        className="peer sr-only"
-        defaultChecked={isControlled ? undefined : defaultChecked}
-        checked={isControlled ? checked : undefined}
-        onChange={(e) => onCheckedChange?.(e.target.checked)}
-      />
-      <div className="peer h-5 w-9 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none" />
-    </label>
-  );
-}
 
 export default function AutomationPage() {
   const { data: config, isLoading, isError: configError, error: configErrObj } = useAutomationConfig();
@@ -182,7 +165,7 @@ export default function AutomationPage() {
 
             <div className="space-y-8">
               <div className="space-y-4">
-                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Target Industry</label>
+                <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Target Industry</Label>
                 <div className="rounded-xl border border-slate-200/70 bg-surface p-3">
                   <div className="flex flex-wrap gap-2.5">
                   {currentForm.target_industries.map((tag, idx) => (
@@ -195,14 +178,16 @@ export default function AutomationPage() {
                         onChange={(e) => updateIndustry(idx, e.target.value)}
                         className="h-7 min-w-[88px] max-w-[170px] !rounded-none !border-0 !bg-transparent p-0 text-sm font-semibold text-primary !shadow-none focus-visible:ring-0"
                       />
-                      <button
+                      <Button
                         type="button"
-                        className="inline-flex h-6 w-6 items-center justify-center rounded-full text-primary/70 transition hover:bg-primary/15 hover:text-primary"
+                        variant="ghost"
+                        size="icon-xs"
+                        className="shrink-0 rounded-full text-primary/70 hover:bg-primary/15 hover:text-primary"
                         onClick={() => removeIndustry(idx)}
                         aria-label={`Remove ${tag}`}
                       >
                         <X className="size-3" />
-                      </button>
+                      </Button>
                     </span>
                   ))}
                   </div>
@@ -220,34 +205,39 @@ export default function AutomationPage() {
                         }
                       }}
                     />
-                    <button
+                    <Button
                       type="button"
-                      className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white transition hover:opacity-90"
+                      size="xs"
+                      className="shrink-0 rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground hover:opacity-90"
                       onClick={addIndustry}
                     >
                       Add
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-end justify-between">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                  <Label htmlFor="company-size-slider" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
                     Company Size (Employees)
-                  </label>
+                  </Label>
                   <span className="text-sm font-bold text-primary">{sizeLabel}</span>
                 </div>
                 <div className="relative pt-1">
-                  <input
-                    type="range"
+                  <Slider
+                    id="company-size-slider"
                     min={1}
                     max={1000}
-                    value={currentForm.company_size_max}
-                    onChange={(e) =>
-                      updateForm((prev) => ({ ...prev, company_size_max: Number(e.target.value) }))
-                    }
-                    className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-surface-container-high accent-primary"
+                    step={1}
+                    value={[currentForm.company_size_max]}
+                    onValueChange={(v) => {
+                      const next = v[0];
+                      if (typeof next === "number") {
+                        updateForm((prev) => ({ ...prev, company_size_max: next }));
+                      }
+                    }}
+                    className="w-full cursor-pointer"
                   />
                   <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400">
                     <span>1</span>
@@ -260,23 +250,29 @@ export default function AutomationPage() {
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-4">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Geography</label>
-                  <div className="relative">
-                    <select
-                      value={currentForm.geography}
-                      onChange={(e) => updateForm((prev) => ({ ...prev, geography: e.target.value }))}
-                      className="w-full appearance-none rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20"
+                  <Label htmlFor="automation-geography" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    Geography
+                  </Label>
+                  <Select
+                    value={currentForm.geography}
+                    onValueChange={(value) => updateForm((prev) => ({ ...prev, geography: value }))}
+                  >
+                    <SelectTrigger
+                      id="automation-geography"
+                      className="h-auto w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm font-semibold shadow-none focus:ring-2 focus:ring-primary/20"
                     >
-                      <option value="na">North America</option>
-                      <option value="eu">Europe</option>
-                      <option value="apac">Asia Pacific</option>
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" aria-hidden />
-                  </div>
+                      <SelectValue placeholder="Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="na">North America</SelectItem>
+                      <SelectItem value="eu">Europe</SelectItem>
+                      <SelectItem value="apac">Asia Pacific</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Tech Stack</label>
+                  <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Tech Stack</Label>
                   <div className="rounded-xl border border-slate-200/70 bg-surface p-3">
                     <div className="flex flex-wrap gap-2">
                       {currentForm.tech_stack.map((t, idx) => (
@@ -285,14 +281,16 @@ export default function AutomationPage() {
                           className="inline-flex h-8 items-center gap-1.5 rounded-full bg-slate-100 px-3 text-xs font-semibold text-slate-700"
                         >
                           {t}
-                          <button
+                          <Button
                             type="button"
-                            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-200 hover:text-slate-800"
+                            variant="ghost"
+                            size="icon-xs"
+                            className="size-5 shrink-0 rounded-full text-slate-500 hover:bg-slate-200 hover:text-slate-800"
                             onClick={() => removeTech(idx)}
                             aria-label={`Remove ${t}`}
                           >
                             <X className="size-3" />
-                          </button>
+                          </Button>
                         </span>
                       ))}
                     </div>
@@ -310,13 +308,14 @@ export default function AutomationPage() {
                         }}
                         placeholder="Add technology"
                       />
-                      <button
+                      <Button
                         type="button"
-                        className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white transition hover:opacity-90"
+                        size="xs"
+                        className="shrink-0 rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground hover:opacity-90"
                         onClick={addTech}
                       >
                         Add
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -337,10 +336,11 @@ export default function AutomationPage() {
                 { key: "salesforce", name: "Salesforce", src: SALESFORCE_IMG },
                 { key: "pipedrive", name: "Pipedrive", src: PIPEDRIVE_IMG },
               ].map((crm) => (
-                <button
+                <Button
                   key={crm.key}
                   type="button"
-                  className="group flex flex-col items-center justify-center space-y-4 rounded-xl border border-slate-100 p-6 transition-all hover:border-primary/40 hover:bg-primary/5"
+                  variant="outline"
+                  className="group h-auto min-h-[148px] w-full flex-col gap-4 rounded-xl border-slate-100 p-6 font-normal transition-all hover:border-primary/40 hover:bg-primary/5"
                   onClick={() =>
                     updateForm((prev) => ({
                       ...prev,
@@ -356,7 +356,7 @@ export default function AutomationPage() {
                   <span className="text-xs font-bold text-slate-600 group-hover:text-primary">
                     {currentForm.crm_connections[crm.key] ? `Connected ${crm.name}` : `Connect ${crm.name}`}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           </section>
@@ -375,12 +375,13 @@ export default function AutomationPage() {
                     {row.icon}
                     <span className="text-sm font-semibold text-slate-700">{row.label}</span>
                   </div>
-                  <PeerToggle
+                  <Switch
                     id={`source-${row.key}`}
                     checked={Boolean(currentForm.sources[row.key])}
                     onCheckedChange={(next) =>
                       updateForm((prev) => ({ ...prev, sources: { ...prev.sources, [row.key]: next } }))
                     }
+                    aria-label={`${row.label} data source`}
                   />
                 </div>
               ))}
@@ -393,18 +394,24 @@ export default function AutomationPage() {
             </div>
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-tight text-slate-500">Daily Refresh</span>
-                <PeerToggle
+                <Label htmlFor="daily-refresh" className="cursor-pointer text-xs font-bold uppercase tracking-tight text-slate-500">
+                  Daily Refresh
+                </Label>
+                <Switch
                   id="daily-refresh"
                   checked={currentForm.daily_refresh}
                   onCheckedChange={(next) => updateForm((prev) => ({ ...prev, daily_refresh: next }))}
+                  aria-label="Daily refresh"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-slate-400">Refresh Time</label>
+                <Label htmlFor="refresh-time" className="text-[10px] font-bold uppercase text-slate-400">
+                  Refresh Time
+                </Label>
                 <div className="relative">
                   <Input
+                    id="refresh-time"
                     className="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm font-bold focus-visible:ring-2 focus-visible:ring-primary/20"
                     value={currentForm.refresh_time}
                     onChange={(e) => updateForm((prev) => ({ ...prev, refresh_time: e.target.value }))}
