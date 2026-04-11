@@ -48,3 +48,52 @@ export function useCreateLead() {
     },
   });
 }
+
+export function useLead(leadId: string | null) {
+  return useQuery({
+    queryKey: ["lead", leadId],
+    queryFn: async () => {
+      const response = await apiClient.get<ApiResponse<Lead>>(`/leads/${leadId}`);
+      return response.data.data;
+    },
+    enabled: Boolean(leadId),
+  });
+}
+
+export function useQualifyLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (leadId: string) => {
+      await apiClient.post(`/leads/${leadId}/qualify`);
+    },
+    onSuccess: async (_, leadId) => {
+      await queryClient.invalidateQueries({ queryKey: ["leads"] });
+      await queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+    },
+  });
+}
+
+export function useDisqualifyLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (leadId: string) => {
+      await apiClient.post(`/leads/${leadId}/disqualify`);
+    },
+    onSuccess: async (_, leadId) => {
+      await queryClient.invalidateQueries({ queryKey: ["leads"] });
+      await queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+    },
+  });
+}
+
+export function useDeleteLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (leadId: string) => {
+      await apiClient.delete(`/leads/${leadId}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+}

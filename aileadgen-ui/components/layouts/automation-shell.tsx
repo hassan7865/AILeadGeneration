@@ -4,23 +4,20 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  Bell,
-  Filter,
-  HelpCircle,
   LayoutDashboard,
   LineChart,
   Plus,
-  Search,
-  Settings,
-  Sparkles,
   LogOut,
   Menu,
+  Sparkles,
 } from "lucide-react";
 
+import { initialsFromName, stringToAvatarClass } from "@/lib/avatar-styles";
 import { cn } from "@/lib/utils";
 import { useAuthMe } from "@/hooks/use-auth";
 import { AddLeadDialog } from "@/components/features/leads/add-lead-dialog";
 import { InlineError } from "@/components/shared/inline-error";
+import { LeadSearchField } from "@/components/layouts/lead-search-field";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,13 +27,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { apiClient } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/error";
+import { LeadSearchProvider } from "@/providers/lead-search-provider";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
-const SIDEBAR_AVATAR =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAF2bg9COxZqco_05not2WogofClYJakv0qynHlVxvwCtuo8p6wCpm3cLFIf8UVVwb2zB8vjzopl_5zkeiFhELHflwAD4tVHkqLxNtcJfeHewqZx3ZH3dgRvcBxNdd1z1NyJml2pLOgFA3Z5tpII0ghmCZnWImbQBe7xVwNarR1t8nQ9L3s62I-9PQQgNfWdzAjM0vEBdRWwjBr7ebrvC1lXa-QNeAJbDWNJg5FLbBZNu6Xssv8Ek9NVThhVbPha-6sFL4s1clgQoBi";
 
 const navItems: { href: string; label: string; icon: React.ReactNode; activeClass?: string }[] = [
   { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="size-5" /> },
@@ -50,11 +44,16 @@ const navItems: { href: string; label: string; icon: React.ReactNode; activeClas
   },
 ];
 
-export function AutomationShell({ children }: { children: React.ReactNode }) {
+function AutomationShellLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: me, isError: meError, error: meErrObj } = useAuthMe();
   const [loggingOut, setLoggingOut] = useState(false);
+  const onDashboard = pathname === "/dashboard";
+  const displayName = me?.name?.trim() || me?.email || "Account";
+  const avatarKey = me?.email ?? me?.name ?? "user";
+  const avatarInitials = initialsFromName(me?.name?.trim() ? me.name : me?.email || "User");
+  const roleLabel = me?.role === "admin" ? "Administrator" : "Member";
 
   const onLogout = async () => {
     setLoggingOut(true);
@@ -93,52 +92,57 @@ export function AutomationShell({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
-        <Link
-          href="#"
-          className="flex items-center gap-3 px-6 py-3 text-slate-400 transition-all duration-200 hover:bg-white/5 hover:text-white"
-        >
-          <Settings className="size-5" />
-          <span>Settings</span>
-        </Link>
-        <Link
-          href="#"
-          className="flex items-center gap-3 px-6 py-3 text-slate-400 transition-all duration-200 hover:bg-white/5 hover:text-white"
-        >
-          <HelpCircle className="size-5" />
-          <span>Help</span>
-        </Link>
       </nav>
       <div className="mt-auto px-6 pt-6">
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              className="h-auto w-full justify-start gap-3 rounded-xl bg-white/5 p-3 font-normal text-left hover:bg-white/10"
+              className={cn(
+                "flex w-full items-center gap-3 rounded-xl bg-white/5 p-3 text-left transition-colors outline-none",
+                "text-white hover:bg-white/10",
+                "focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F1117]",
+                "data-[state=open]:bg-white/15"
+              )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={SIDEBAR_AVATAR} alt="" className="size-8 rounded-full bg-slate-700 object-cover" />
-              <div className="min-w-0 overflow-hidden">
-                <p className="truncate text-xs font-semibold text-white">{me?.name ?? "Alex Chen"}</p>
-                <p className="truncate text-[10px] text-slate-500">Pro Account</p>
+              <div
+                className={cn(
+                  "flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
+                  stringToAvatarClass(avatarKey)
+                )}
+                aria-hidden
+              >
+                {avatarInitials}
               </div>
-            </Button>
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <p className="truncate text-xs font-semibold text-white">{displayName}</p>
+                <p className="truncate text-[10px] text-slate-400">{roleLabel}</p>
+              </div>
+            </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60 rounded-xl border border-slate-200/80 bg-white p-2 shadow-xl">
-            <DropdownMenuLabel className="px-2 py-2">
+          <DropdownMenuContent
+            align="end"
+            side="right"
+            sideOffset={10}
+            alignOffset={0}
+            collisionPadding={12}
+            className="z-[200] w-[min(240px,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl ring-1 ring-black/5"
+          >
+            <DropdownMenuLabel className="px-2 py-2 text-slate-900">
               <div className="space-y-0.5">
-                <p className="truncate text-sm font-semibold text-slate-900">{me?.name ?? "Account"}</p>
-                <p className="truncate text-xs text-slate-500">{me?.email ?? "No email"}</p>
+                <p className="truncate text-sm font-semibold">{displayName}</p>
+                <p className="truncate text-xs font-normal text-slate-500">{me?.email ?? "—"}</p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-slate-200" />
             <DropdownMenuItem
+              variant="destructive"
               onClick={() => void onLogout()}
               disabled={loggingOut}
-              className="mt-1 flex cursor-pointer items-center rounded-lg px-2 py-2 text-sm font-medium text-destructive focus:bg-destructive/10 focus:text-destructive"
+              className="mt-0.5 cursor-pointer gap-2 rounded-lg px-2 py-2.5 text-sm font-medium"
             >
-              <LogOut className="mr-1 size-4" />
-              {loggingOut ? "Logging out..." : "Logout"}
+              <LogOut className="size-4 shrink-0" />
+              {loggingOut ? "Logging out…" : "Log out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -153,8 +157,8 @@ export function AutomationShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="min-h-screen flex-1 bg-surface md:ml-[220px]">
-        <header className="sticky top-0 right-0 z-40 flex h-16 w-full items-center justify-between bg-white/80 px-4 font-sans text-sm font-medium backdrop-blur-md md:px-8">
-          <div className="flex items-center gap-2 md:hidden">
+        <header className="sticky top-0 right-0 z-40 flex h-16 w-full items-center gap-3 bg-white/80 px-4 font-sans text-sm font-medium backdrop-blur-md md:px-8">
+          <div className="flex shrink-0 items-center md:hidden">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -166,22 +170,12 @@ export function AutomationShell({ children }: { children: React.ReactNode }) {
               </SheetContent>
             </Sheet>
           </div>
-          <div className="hidden w-full max-w-md items-center rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20 md:flex">
-            <Search className="mr-2 size-4 shrink-0 text-slate-400" aria-hidden />
-            <Input
-              className="h-auto border-0 bg-transparent p-0 text-sm text-slate-700 shadow-none ring-0 placeholder:text-slate-400 focus-visible:ring-0"
-              placeholder="Search automation workflows..."
-            />
-          </div>
-          <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="icon" className="hidden rounded-full text-slate-500 hover:bg-slate-100 sm:inline-flex">
-              <Filter className="size-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="relative rounded-full text-slate-500 hover:bg-slate-100">
-              <Bell className="size-5" />
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-error" />
-            </Button>
-            <div className="mx-1 hidden h-6 w-[1px] bg-outline-variant/20 sm:block" />
+          {onDashboard ? (
+            <LeadSearchField className="min-w-0 flex-1 md:max-w-lg" />
+          ) : (
+            <div className="hidden min-h-10 flex-1 md:block" aria-hidden />
+          )}
+          <div className="ml-auto flex shrink-0 items-center">
             <AddLeadDialog>
               <Button className="flex items-center gap-2 rounded-lg bg-primary-container px-3 py-2 text-xs font-semibold text-white shadow-md hover:opacity-90 active:scale-95 sm:px-4 sm:text-sm">
                 <Plus className="size-4" />
@@ -196,5 +190,13 @@ export function AutomationShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
     </div>
+  );
+}
+
+export function AutomationShell({ children }: { children: React.ReactNode }) {
+  return (
+    <LeadSearchProvider>
+      <AutomationShellLayout>{children}</AutomationShellLayout>
+    </LeadSearchProvider>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api/client";
 import type {
@@ -30,6 +30,7 @@ export function useLeadQuality(days = 30) {
       );
       return response.data.data;
     },
+    placeholderData: keepPreviousData,
   });
 }
 

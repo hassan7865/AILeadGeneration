@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { useState } from "react";
+
 import { AppShell } from "@/components/layouts/app-shell";
 import { LeadsTable } from "@/components/features/leads/leads-table";
 import { InlineError } from "@/components/shared/inline-error";
@@ -7,10 +10,19 @@ import { Button } from "@/components/ui/button";
 import { ListLoader } from "@/components/shared/list-loader";
 import { useAutomationRuns } from "@/hooks/use-automation";
 import { useInsightsSummary } from "@/hooks/use-insights";
+import type { LeadSegmentFilter } from "@/lib/lead-segment";
 import { parseApiError } from "@/lib/api/error";
+import { cn } from "@/lib/utils";
 import { Bot, ChartLine } from "lucide-react";
 
+const SEGMENTS: { id: LeadSegmentFilter; label: string; className?: string }[] = [
+  { id: "all", label: "All Leads" },
+  { id: "by_score", label: "By Score" },
+  { id: "recent", label: "Recently Added", className: "hidden sm:inline-flex" },
+];
+
 export default function DashboardPage() {
+  const [segment, setSegment] = useState<LeadSegmentFilter>("all");
   const { data: summary, isLoading: loadingSummary, isError: summaryError, error: summaryErrObj } = useInsightsSummary();
   const { data: runs, isLoading: loadingRuns, isError: runsError, error: runsErrObj } = useAutomationRuns();
   const queryError = summaryError
@@ -43,12 +55,25 @@ export default function DashboardPage() {
             <p className="mt-1 text-sm text-slate-500">Manage and monitor your high-intent potential customers.</p>
           </div>
           <div className="flex w-full gap-2 rounded-xl bg-surface-container-low p-1 md:w-auto">
-            <Button size="sm" className="rounded-lg bg-white text-primary shadow-sm">All Leads</Button>
-            <Button size="sm" variant="ghost" className="rounded-lg text-slate-500">By Score</Button>
-            <Button size="sm" variant="ghost" className="hidden rounded-lg text-slate-500 sm:inline-flex">Recently Added</Button>
+            {SEGMENTS.map((s) => (
+              <Button
+                key={s.id}
+                type="button"
+                size="sm"
+                variant="ghost"
+                className={cn(
+                  "rounded-lg",
+                  segment === s.id ? "bg-white font-semibold text-primary shadow-sm" : "font-medium text-slate-500",
+                  s.className
+                )}
+                onClick={() => setSegment(s.id)}
+              >
+                {s.label}
+              </Button>
+            ))}
           </div>
         </div>
-        <LeadsTable />
+        <LeadsTable segment={segment} />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <div className="relative overflow-hidden rounded-xl bg-surface-container-low p-6 lg:col-span-8">
             <div className="relative z-10">
@@ -64,12 +89,17 @@ export default function DashboardPage() {
                 <div className="space-y-1 sm:border-l sm:border-outline-variant/20 sm:pl-6">
                   <p className="text-3xl font-extrabold text-on-surface">{signalsWeek}</p>
                   <p className="text-xs text-slate-500">Signals (last 7 days)</p>
-                  <p className="mt-2 text-[10px] font-bold text-primary">From live signal feed →</p>
+                  <Link
+                    href="/insights#recent-signals"
+                    className="mt-2 inline-block text-[10px] font-bold text-primary underline-offset-2 hover:underline"
+                  >
+                    View signal feed →
+                  </Link>
                 </div>
                 <div className="space-y-1 sm:border-l sm:border-outline-variant/20 sm:pl-6">
                   <p className="text-3xl font-extrabold text-on-surface">{totalLeads}</p>
                   <p className="text-xs text-slate-500">Addressable TAM</p>
-                  <p className="mt-2 text-[10px] text-slate-400">Market: Live database</p>
+                  <p className="mt-2 text-[10px] text-slate-400">Leads in your workspace</p>
                 </div>
               </div>
             </div>
@@ -88,7 +118,9 @@ export default function DashboardPage() {
             <p className="mb-6 text-xs text-indigo-200">
               Latest run: {latestRun?.status ?? "not_started"}. Qualified leads: {qualified}.
             </p>
-            <Button className="w-full rounded-lg bg-white py-2.5 text-xs font-bold text-indigo-900 hover:bg-indigo-50">View Recommendations</Button>
+            <Button className="w-full rounded-lg bg-white py-2.5 text-xs font-bold text-indigo-900 hover:bg-indigo-50" asChild>
+              <Link href="/insights">View recommendations</Link>
+            </Button>
           </div>
         </div>
       </div>

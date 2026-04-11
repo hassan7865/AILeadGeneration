@@ -49,13 +49,15 @@ export default function RegisterPage() {
           <div className="flex items-center gap-8">
             <div className="hidden items-center gap-2 md:flex">
               <Button variant="link" className="h-auto px-2 text-sm font-normal text-slate-500" asChild>
-                <a href="#">Support</a>
+                <Link href="/support">Support</Link>
               </Button>
               <Button variant="link" className="h-auto px-2 text-sm font-normal text-slate-500" asChild>
-                <a href="#">Documentation</a>
+                <Link href="/docs">Documentation</Link>
               </Button>
             </div>
-            <Link href="/register" className="text-sm font-semibold text-blue-600">Sign Up</Link>
+            <Link href="/login" className="text-sm font-semibold text-primary">
+              Sign In
+            </Link>
           </div>
         </div>
       </nav>

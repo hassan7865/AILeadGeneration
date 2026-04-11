@@ -16,8 +16,8 @@ import { parseApiError } from "@/lib/api/error";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("m.hassansiddiqui9245@gmail.com");
-  const [password, setPassword] = useState("start@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -47,8 +47,8 @@ export default function LoginPage() {
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="text-xl font-bold tracking-tighter text-slate-900">LeadAgent</div>
           <div className="flex items-center gap-6 text-sm">
-            <Button type="button" variant="ghost" className="hidden h-auto px-2 font-normal text-slate-500 md:inline-flex">
-              Support
+            <Button type="button" variant="ghost" className="hidden h-auto px-2 font-normal text-slate-500 md:inline-flex" asChild>
+              <Link href="/support">Support</Link>
             </Button>
             <Link href="/register" className="font-semibold text-primary">
               Sign Up
@@ -99,8 +99,8 @@ export default function LoginPage() {
                     <Label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-[0.05em] text-on-surface-variant">
                       Password
                     </Label>
-                    <Button variant="link" className="h-auto p-0 text-[13px]">
-                      Forgot password?
+                    <Button variant="link" className="h-auto p-0 text-[13px]" asChild>
+                      <Link href="/forgot-password">Forgot password?</Link>
                     </Button>
                   </div>
                   <div className="relative">

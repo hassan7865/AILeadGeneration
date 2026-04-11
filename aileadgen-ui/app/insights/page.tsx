@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { useState } from "react";
+
 import { AppShell } from "@/components/layouts/app-shell";
 import { InlineError } from "@/components/shared/inline-error";
 import { ListLoader } from "@/components/shared/list-loader";
@@ -26,7 +29,11 @@ import {
   YAxis,
 } from "recharts";
 
+import { cn } from "@/lib/utils";
+
 const PIE_COLORS = ["#004ac6", "#2563eb", "#b4c5ff", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9"];
+
+const RANGE_OPTIONS = [7, 30, 90] as const;
 
 function fmtPct(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return "—";
@@ -61,8 +68,9 @@ function iconForSignalType(st: string) {
 }
 
 export default function InsightsPage() {
+  const [rangeDays, setRangeDays] = useState<(typeof RANGE_OPTIONS)[number]>(30);
   const { data: summary, isLoading: loadingSummary, isError: summaryError, error: summaryErrObj } = useInsightsSummary();
-  const { data: quality, isLoading: loadingQuality, isError: qualityError, error: qualityErrObj } = useLeadQuality(30);
+  const { data: quality, isLoading: loadingQuality, isError: qualityError, error: qualityErrObj } = useLeadQuality(rangeDays);
   const { data: sources, isLoading: loadingSources, isError: sourcesError, error: sourcesErrObj } = useSignalSources();
   const { data: icp, isLoading: loadingIcp, isError: icpError, error: icpErrObj } = useIcpHealth();
   const {
@@ -72,7 +80,7 @@ export default function InsightsPage() {
     error: eventsErrObj,
   } = useSignalEvents(20);
 
-  if (loadingSummary || loadingQuality || loadingSources || loadingIcp || loadingEvents) {
+  if (loadingSummary || loadingSources || loadingIcp || loadingEvents) {
     return (
       <AppShell>
         <div className="p-8">
@@ -115,8 +123,22 @@ export default function InsightsPage() {
             <span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary">Intelligence Center</span>
             <h2 className="mt-1 text-3xl font-extrabold tracking-tight text-on-surface">Growth Insights</h2>
           </div>
-          <div className="flex items-center gap-3 rounded-lg bg-surface-container-low p-1">
-            <span className="rounded-md bg-white px-4 py-1.5 text-xs font-semibold shadow-sm">Last 30 Days</span>
+          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-surface-container-low p-1">
+            {RANGE_OPTIONS.map((d) => (
+              <Button
+                key={d}
+                type="button"
+                size="sm"
+                variant="ghost"
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-xs font-semibold",
+                  rangeDays === d ? "bg-white text-primary shadow-sm" : "text-slate-500"
+                )}
+                onClick={() => setRangeDays(d)}
+              >
+                Last {d} days
+              </Button>
+            ))}
           </div>
         </div>
 
@@ -190,7 +212,7 @@ export default function InsightsPage() {
             <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <h4 className="text-lg font-bold tracking-tight">Lead Quality Over Time</h4>
-                <p className="text-sm text-secondary">Daily leads and qualified (from your database)</p>
+                <p className="text-sm text-secondary">Daily leads and qualified — last {rangeDays} days (from your database)</p>
               </div>
               <div className="flex flex-wrap items-center gap-4 md:gap-6">
                 <div className="flex items-center gap-2">
@@ -204,7 +226,11 @@ export default function InsightsPage() {
               </div>
             </div>
             <div className="relative mt-4 h-[280px] w-full">
-              {chartData.length === 0 ? (
+              {loadingQuality && quality === undefined ? (
+                <div className="flex h-full items-center justify-center">
+                  <ListLoader rows={6} />
+                </div>
+              ) : chartData.length === 0 ? (
                 <p className="flex h-full items-center justify-center text-sm text-secondary">No lead data in this range.</p>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -308,7 +334,7 @@ export default function InsightsPage() {
           </div>
         </div>
 
-        <section className="mt-8">
+        <section id="recent-signals" className="mt-8 scroll-mt-24">
           <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <h4 className="text-lg font-extrabold tracking-tight">Recent Signal Events</h4>
             <span className="text-sm text-secondary">
@@ -351,13 +377,13 @@ export default function InsightsPage() {
           <p>© 2026 LeadAgent AI Platform. All rights reserved.</p>
           <div className="flex flex-wrap gap-2">
             <Button variant="link" className="h-auto px-2 text-[11px] font-medium text-slate-400" asChild>
-              <a href="#">Privacy Policy</a>
+              <Link href="/privacy">Privacy Policy</Link>
             </Button>
             <Button variant="link" className="h-auto px-2 text-[11px] font-medium text-slate-400" asChild>
-              <a href="#">Terms of Service</a>
+              <Link href="/terms">Terms of Service</Link>
             </Button>
             <Button variant="link" className="h-auto px-2 text-[11px] font-medium text-slate-400" asChild>
-              <a href="#">System Status</a>
+              <Link href="/status">System Status</Link>
             </Button>
           </div>
         </footer>
