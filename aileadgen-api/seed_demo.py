@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Seed demo data so UI pages show real database content.
 
-Run from project root:
-  python scripts/ingest_demo_data.py
+Run from API directory:
+  python seed_demo.py
 """
 
 from __future__ import annotations
@@ -16,8 +16,7 @@ from pathlib import Path
 from sqlalchemy import select
 
 
-ROOT = Path(__file__).resolve().parents[1]
-API_ROOT = ROOT / "aileadgen-api"
+API_ROOT = Path(__file__).resolve().parent
 if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
 
@@ -48,7 +47,9 @@ DEMO_USER_PASSWORD = "start@123"
 
 async def get_or_create_agency() -> Agency:
     async with SessionLocal() as db:
-        agency = await db.scalar(select(Agency).where(Agency.name == "LeadAgent Demo Agency"))
+        agency = await db.scalar(
+            select(Agency).where(Agency.name == "LeadAgent Demo Agency")
+        )
         if agency:
             return agency
         agency = Agency(name="LeadAgent Demo Agency", plan=AgencyPlan.pro, seats=10)
@@ -86,8 +87,15 @@ async def seed_companies_contacts_leads_signals(user_id: uuid.UUID) -> None:
             "size": "200-500",
             "employee_count": 380,
             "contact": ("Maya", "Patel", "maya@stripeconnect.com"),
-            "lead": {"score": 91, "status": LeadStatus.qualified, "source": LeadSource.linkedin},
-            "signal": (SignalType.funding_round, "Raised a new strategic growth round."),
+            "lead": {
+                "score": 91,
+                "status": LeadStatus.qualified,
+                "source": LeadSource.linkedin,
+            },
+            "signal": (
+                SignalType.funding_round,
+                "Raised a new strategic growth round.",
+            ),
         },
         {
             "company": "Veridian Corp",
@@ -97,7 +105,11 @@ async def seed_companies_contacts_leads_signals(user_id: uuid.UUID) -> None:
             "size": "500-1000",
             "employee_count": 620,
             "contact": ("Daniel", "Ng", "daniel@veridian.example"),
-            "lead": {"score": 83, "status": LeadStatus.qualified, "source": LeadSource.crunchbase},
+            "lead": {
+                "score": 83,
+                "status": LeadStatus.qualified,
+                "source": LeadSource.crunchbase,
+            },
             "signal": (SignalType.leadership_change, "New VP Engineering announced."),
         },
         {
@@ -108,7 +120,11 @@ async def seed_companies_contacts_leads_signals(user_id: uuid.UUID) -> None:
             "size": "50-200",
             "employee_count": 140,
             "contact": ("Sara", "Lee", "sara@acmeai.example"),
-            "lead": {"score": 76, "status": LeadStatus.contacted, "source": LeadSource.apollo},
+            "lead": {
+                "score": 76,
+                "status": LeadStatus.contacted,
+                "source": LeadSource.apollo,
+            },
             "signal": (SignalType.hiring_surge, "Hiring for 15 GTM roles this month."),
         },
         {
@@ -119,7 +135,11 @@ async def seed_companies_contacts_leads_signals(user_id: uuid.UUID) -> None:
             "size": "200-500",
             "employee_count": 260,
             "contact": ("Priya", "Nair", "priya@northstarhealth.example"),
-            "lead": {"score": 68, "status": LeadStatus.new, "source": LeadSource.jobboard},
+            "lead": {
+                "score": 68,
+                "status": LeadStatus.new,
+                "source": LeadSource.jobboard,
+            },
             "signal": (SignalType.expansion, "Expanded to two new regional markets."),
         },
         {
@@ -130,7 +150,11 @@ async def seed_companies_contacts_leads_signals(user_id: uuid.UUID) -> None:
             "size": "50-200",
             "employee_count": 95,
             "contact": ("Leo", "Kim", "leo@blueorbit.example"),
-            "lead": {"score": 72, "status": LeadStatus.new, "source": LeadSource.linkedin},
+            "lead": {
+                "score": 72,
+                "status": LeadStatus.new,
+                "source": LeadSource.linkedin,
+            },
             "signal": (SignalType.hiring_surge, "Hiring surge in sales operations."),
         },
         {
@@ -141,7 +165,11 @@ async def seed_companies_contacts_leads_signals(user_id: uuid.UUID) -> None:
             "size": "1000+",
             "employee_count": 1400,
             "contact": ("Nora", "Silva", "nora@helioworks.example"),
-            "lead": {"score": 61, "status": LeadStatus.contacted, "source": LeadSource.crunchbase},
+            "lead": {
+                "score": 61,
+                "status": LeadStatus.contacted,
+                "source": LeadSource.crunchbase,
+            },
             "signal": (SignalType.expansion, "Opened a new enterprise business unit."),
         },
     ]
@@ -149,7 +177,9 @@ async def seed_companies_contacts_leads_signals(user_id: uuid.UUID) -> None:
     now = datetime.now(UTC)
     async with SessionLocal() as db:
         for idx, row in enumerate(dataset):
-            company = await db.scalar(select(Company).where(Company.name == row["company"]))
+            company = await db.scalar(
+                select(Company).where(Company.name == row["company"])
+            )
             if company is None:
                 company = Company(
                     name=row["company"],
@@ -210,7 +240,11 @@ async def seed_companies_contacts_leads_signals(user_id: uuid.UUID) -> None:
                 db.add(signal)
                 await db.flush()
 
-            ls = await db.scalar(select(LeadSignal).where(LeadSignal.lead_id == lead.id, LeadSignal.signal_id == signal.id))
+            ls = await db.scalar(
+                select(LeadSignal).where(
+                    LeadSignal.lead_id == lead.id, LeadSignal.signal_id == signal.id
+                )
+            )
             if ls is None:
                 db.add(LeadSignal(lead_id=lead.id, signal_id=signal.id))
 
@@ -225,23 +259,41 @@ async def seed_automation_and_runs() -> None:
                 id=AUTOMATION_SETTINGS_SINGLETON_ID,
                 daily_refresh=True,
                 refresh_time="08:00 AM",
-                sources={"linkedin": True, "crunchbase": True, "apollo": True, "jobboard": True},
+                sources={
+                    "linkedin": True,
+                    "crunchbase": True,
+                    "apollo": True,
+                    "jobboard": True,
+                },
                 target_industries=["SaaS", "FinTech", "HealthTech"],
                 company_size_min=1,
                 company_size_max=500,
                 geography="na",
                 tech_stack=["React", "AWS"],
-                crm_connections={"hubspot": True, "salesforce": False, "pipedrive": True},
+                crm_connections={
+                    "hubspot": True,
+                    "salesforce": False,
+                    "pipedrive": True,
+                },
             )
             db.add(settings)
         else:
-            settings.sources = {"linkedin": True, "crunchbase": True, "apollo": True, "jobboard": True}
+            settings.sources = {
+                "linkedin": True,
+                "crunchbase": True,
+                "apollo": True,
+                "jobboard": True,
+            }
             settings.target_industries = ["SaaS", "FinTech", "HealthTech"]
             settings.company_size_min = 1
             settings.company_size_max = 500
             settings.geography = "na"
             settings.tech_stack = ["React", "AWS", "Postgres"]
-            settings.crm_connections = {"hubspot": True, "salesforce": False, "pipedrive": True}
+            settings.crm_connections = {
+                "hubspot": True,
+                "salesforce": False,
+                "pipedrive": True,
+            }
 
         existing_runs = (await db.scalars(select(PipelineRun).limit(1))).all()
         if not existing_runs:
@@ -252,7 +304,11 @@ async def seed_automation_and_runs() -> None:
                         status="done",
                         started_at=now - timedelta(hours=26),
                         completed_at=now - timedelta(hours=25, minutes=42),
-                        logs=["scan complete", "lead scoring complete", "crm sync complete"],
+                        logs=[
+                            "scan complete",
+                            "lead scoring complete",
+                            "crm sync complete",
+                        ],
                     ),
                     PipelineRun(
                         status="running",
